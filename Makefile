@@ -45,14 +45,24 @@ run-local:
 run-prod:
 	$(MVNW) spring-boot:run -Dspring-boot.run.profiles=prod
 
+## run-dev: Run the app natively with the 'dev' profile (Supabase Dev)
+run-dev:
+	$(MVNW) spring-boot:run -Dspring-boot.run.profiles=dev
+
 # GCP Variables
+ENV ?= dev
 GCP_PROJECT_ID = project-vital-2026-v1
 GCP_REGION = us-central1
-GCP_REPO = project-vital-repo
-GCP_IMAGE = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(GCP_REPO)/projectvital
+GCP_REPO = project-vital-repo-$(ENV)
+GCP_APP_NAME = projectvital-$(ENV)
+GCP_IMAGE = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(GCP_REPO)/$(GCP_APP_NAME)
 
 docker-build:
 	docker build -t projectvital:latest .
+
+## docker-dev: Run the Docker container locally with the 'dev' profile
+docker-dev:
+	docker run --rm -p 8080:8080 --dns 8.8.8.8 --env-file .env -e SPRING_PROFILES_ACTIVE=dev projectvital:latest
 
 docker-run:
 	docker run --rm -p 8080:8080 --dns 8.8.8.8 --env-file .env projectvital:latest
@@ -75,13 +85,24 @@ gcp-push:
 
 ## gcp-deploy: Deploy to Cloud Run
 gcp-deploy:
-	gcloud run deploy projectvital \
+ifeq ($(ENV),prod)
+	gcloud run deploy $(GCP_APP_NAME) \
 		--image $(GCP_IMAGE):latest \
 		--platform managed \
 		--region $(GCP_REGION) \
 		--project $(GCP_PROJECT_ID) \
 		--allow-unauthenticated \
-		--set-env-vars "DATABASE_URL=$$(grep DATABASE_URL .env | cut -d= -f2- | sed 's/,/\\,/g'),DATABASE_USERNAME=$$(grep DATABASE_USERNAME .env | cut -d= -f2-),DATABASE_PASSWORD=$$(grep DATABASE_PASSWORD .env | cut -d= -f2-),SUPABASE_KEY=$$(grep SUPABASE_KEY .env | cut -d= -f2-)"
+		--set-env-vars "SPRING_PROFILES_ACTIVE=$(ENV)" \
+		--set-secrets "DATABASE_URL=DATABASE_URL:latest,DATABASE_USERNAME=DATABASE_USERNAME:latest,DATABASE_PASSWORD=DATABASE_PASSWORD:latest,SUPABASE_KEY=SUPABASE_KEY:latest"
+else
+	gcloud run deploy $(GCP_APP_NAME) \
+		--image $(GCP_IMAGE):latest \
+		--platform managed \
+		--region $(GCP_REGION) \
+		--project $(GCP_PROJECT_ID) \
+		--allow-unauthenticated \
+		--set-env-vars "SPRING_PROFILES_ACTIVE=$(ENV),DATABASE_URL=$$(grep DATABASE_URL .env | cut -d= -f2- | sed 's/,/\\,/g'),DATABASE_USERNAME=$$(grep DATABASE_USERNAME .env | cut -d= -f2-),DATABASE_PASSWORD=$$(grep DATABASE_PASSWORD .env | cut -d= -f2-),SUPABASE_KEY=$$(grep SUPABASE_KEY .env | cut -d= -f2-)"
+endif
 
 ## help: Show this help message
 help:

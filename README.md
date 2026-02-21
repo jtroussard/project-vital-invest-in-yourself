@@ -1,5 +1,22 @@
 # Project Vital: Invest in Yourself
 
+Project Vital is a Spring Boot application designed to track and manage personal health vitals.
+
+## Development Environments
+
+| Command | Description | Dockerized | Deploy Target | Database |
+| :--- | :--- | :--- | :--- | :--- |
+| `make run-local` | Fast native development | No | Local | Local Postgres (`localhost`) |
+| `make run-dev` | Native run with Supabase Dev | No | Local | Supabase (Dev Project) |
+| `make docker-dev` | Container testing with Supabase Dev | **Yes** | Local | Supabase (Dev Project) |
+| `make gcp-deploy` | Production Cloud Deployment | **Yes** | **Cloud (GCP)** | Supabase (Prod Project) |
+
+## Quick Start
+1. **Dependencies**: `make install`
+2. **Local DB**: Ensure Postgres is running on `localhost:5432` with a `projectvital` database.
+3. **Secrets**: Create a `.env` file based on `.env.template` with your **Supabase Dev Project** keys.
+4. **Run**: `make run-local` for native development or `make run-dev` to use Supabase.
+
 ## Database
 
 ### Local setup

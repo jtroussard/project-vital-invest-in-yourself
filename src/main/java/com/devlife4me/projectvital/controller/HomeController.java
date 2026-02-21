@@ -12,7 +12,9 @@ public class HomeController {
     public Map<String, Object> home() {
         return Map.of(
                 "status", "Project Vital is UP",
-                "environment", System.getProperty("spring.profiles.active", "prod"),
+                "environment",
+                System.getenv("SPRING_PROFILES_ACTIVE") != null ? System.getenv("SPRING_PROFILES_ACTIVE")
+                        : System.getProperty("spring.profiles.active", "prod"),
                 "message", "Welcome to the Project Vital API",
                 "endpoints", Map.of(
                         "health", "/actuator/health",
