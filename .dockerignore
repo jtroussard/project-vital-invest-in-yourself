@@ -1,0 +1,21 @@
+target/
+!.jar
+
+.git/
+.gitignore
+
+.env
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+pom.xml.template
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
