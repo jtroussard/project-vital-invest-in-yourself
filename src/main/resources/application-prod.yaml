@@ -17,3 +17,9 @@ spring:
         jwt:
           issuer-uri: https://himxfvvjwhhujunzgxkh.supabase.co/auth/v1
           jwk-set-uri: https://himxfvvjwhhujunzgxkh.supabase.co/auth/v1/.well-known/jwks.json
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

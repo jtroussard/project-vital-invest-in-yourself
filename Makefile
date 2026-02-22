@@ -9,7 +9,7 @@ export $(shell [ -f .env ] && sed 's/=.*//' .env)
 clean:
 	$(MVNW) clean
 
-## install: Install dependencies
+## install: Install dependencies and build JAR
 install:
 	$(MVNW) install
 
@@ -29,7 +29,11 @@ reinstall:
 test:
 	$(MVNW) test
 
-## build: Build the project (package)
+## coverage: Run tests and produce a test coverage report
+coverage:
+	$(MVNW) test jacoco:report
+
+## build: Build the project (package JAR)
 build:
 	$(MVNW) package
 
@@ -37,17 +41,17 @@ build:
 run:
 	$(MVNW) spring-boot:run
 
-## run-local: Run the app with the 'local' profile
+## run-local: Run the app with the 'local' profile (native)
 run-local:
 	$(MVNW) spring-boot:run -Dspring-boot.run.profiles=local
 
-## run-prod: Run the app with the 'prod' profile
-run-prod:
-	$(MVNW) spring-boot:run -Dspring-boot.run.profiles=prod
-
-## run-dev: Run the app natively with the 'dev' profile (Supabase Dev)
+## run-dev: Run the app with the 'dev' profile (native)
 run-dev:
 	$(MVNW) spring-boot:run -Dspring-boot.run.profiles=dev
+
+## run-prod: Run the app with the 'prod' profile (native)
+run-prod:
+	$(MVNW) spring-boot:run -Dspring-boot.run.profiles=prod
 
 # GCP Variables
 ENV ?= dev
@@ -57,15 +61,23 @@ GCP_REPO = project-vital-repo-$(ENV)
 GCP_APP_NAME = projectvital-$(ENV)
 GCP_IMAGE = $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/$(GCP_REPO)/$(GCP_APP_NAME)
 
+## docker-build: Build the Docker image locally
 docker-build:
 	docker build -t projectvital:latest .
 
-## docker-dev: Run the Docker container locally with the 'dev' profile
-docker-dev:
+## docker-run-dev: Run the Docker container locally with 'dev' profile
+docker-run-dev:
 	docker run --rm -p 8080:8080 --dns 8.8.8.8 --env-file .env -e SPRING_PROFILES_ACTIVE=dev projectvital:latest
 
-docker-run:
-	docker run --rm -p 8080:8080 --dns 8.8.8.8 --env-file .env projectvital:latest
+## docker-run-prod: Run the Docker container locally with 'prod' profile
+docker-run-prod:
+	docker run --rm -p 8080:8080 --dns 8.8.8.8 --env-file .env -e SPRING_PROFILES_ACTIVE=prod projectvital:latest
+
+## up-dev: Build JAR, build Docker, and run in 'dev' environment
+up-dev: build docker-build docker-run-dev
+
+## up-prod: Build JAR, build Docker, and run in 'prod' environment
+up-prod: build docker-build docker-run-prod
 
 ## gcp-setup: Create Artifact Registry repository
 gcp-setup:
@@ -90,7 +102,7 @@ ifeq ($(ENV),prod)
 		--image $(GCP_IMAGE):latest \
 		--platform managed \
 		--region $(GCP_REGION) \
-		--project $(GCP_PROJECT_ID) \
+		--project=$(GCP_PROJECT_ID) \
 		--allow-unauthenticated \
 		--set-env-vars "SPRING_PROFILES_ACTIVE=$(ENV)" \
 		--set-secrets "DATABASE_URL=DATABASE_URL:latest,DATABASE_USERNAME=DATABASE_USERNAME:latest,DATABASE_PASSWORD=DATABASE_PASSWORD:latest,SUPABASE_KEY=SUPABASE_KEY:latest"
@@ -99,7 +111,7 @@ else
 		--image $(GCP_IMAGE):latest \
 		--platform managed \
 		--region $(GCP_REGION) \
-		--project $(GCP_PROJECT_ID) \
+		--project=$(GCP_PROJECT_ID) \
 		--allow-unauthenticated \
 		--set-env-vars "SPRING_PROFILES_ACTIVE=$(ENV),DATABASE_URL=$$(grep DATABASE_URL .env | cut -d= -f2- | sed 's/,/\\,/g'),DATABASE_USERNAME=$$(grep DATABASE_USERNAME .env | cut -d= -f2-),DATABASE_PASSWORD=$$(grep DATABASE_PASSWORD .env | cut -d= -f2-),SUPABASE_KEY=$$(grep SUPABASE_KEY .env | cut -d= -f2-)"
 endif

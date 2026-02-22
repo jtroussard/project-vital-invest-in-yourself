@@ -1,4 +1,4 @@
-package com.devlife4me.projectvital.model;
+package com.devlife4me.projectvital.model.entity;
 
 import jakarta.persistence.*;
 

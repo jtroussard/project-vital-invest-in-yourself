@@ -8,8 +8,13 @@ Project Vital is a Spring Boot application designed to track and manage personal
 | :--- | :--- | :--- | :--- | :--- |
 | `make run-local` | Fast native development | No | Local | Local Postgres (`localhost`) |
 | `make run-dev` | Native run with Supabase Dev | No | Local | Supabase (Dev Project) |
-| `make docker-dev` | Container testing with Supabase Dev | **Yes** | Local | Supabase (Dev Project) |
+| `make up-dev` | **One-stop-shop** (JAR + Docker + Run) | **Yes** | Local | Supabase (Dev Project) |
+| `make up-prod` | **One-stop-shop** (JAR + Docker + Run) | **Yes** | Local | Supabase (Prod Project) |
 | `make gcp-deploy` | Production Cloud Deployment | **Yes** | **Cloud (GCP)** | Supabase (Prod Project) |
+
+## Swagger
+
+`http://localhost:8080/swagger-ui.html`
 
 ## Quick Start
 1. **Dependencies**: `make install`

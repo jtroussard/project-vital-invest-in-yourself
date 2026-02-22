@@ -1,7 +1,7 @@
 package com.devlife4me.projectvital.controller;
 
-import com.devlife4me.projectvital.model.UserProfile;
-import com.devlife4me.projectvital.repo.UserProfileRepository;
+import com.devlife4me.projectvital.model.entity.UserProfile;
+import com.devlife4me.projectvital.repo.UserProfileRepo;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -13,9 +13,9 @@ import java.util.UUID;
 @RequestMapping("/api/profile")
 public class UserProfileController {
 
-    private final UserProfileRepository profileRepository;
+    private final UserProfileRepo profileRepository;
 
-    public UserProfileController(UserProfileRepository profileRepository) {
+    public UserProfileController(UserProfileRepo profileRepository) {
         this.profileRepository = profileRepository;
     }
 
@@ -43,6 +43,27 @@ public class UserProfileController {
 
         if (profileData.getDisplayName() != null) {
             profile.setDisplayName(profileData.getDisplayName());
+        }
+        if (profileData.getFirstName() != null) {
+            profile.setFirstName(profileData.getFirstName());
+        }
+        if (profileData.getMiddleName() != null) {
+            profile.setMiddleName(profileData.getMiddleName());
+        }
+        if (profileData.getLastName() != null) {
+            profile.setLastName(profileData.getLastName());
+        }
+        if (profileData.getGender() != null) {
+            profile.setGender(profileData.getGender());
+        }
+        if (profileData.getStatus() != null) {
+            profile.setStatus(profileData.getStatus());
+        }
+        if (profileData.getAddress() != null) {
+            profile.setAddress(profileData.getAddress());
+        }
+        if (profileData.getPhoneNumber() != null) {
+            profile.setPhoneNumber(profileData.getPhoneNumber());
         }
 
         return ResponseEntity.ok(profileRepository.save(profile));

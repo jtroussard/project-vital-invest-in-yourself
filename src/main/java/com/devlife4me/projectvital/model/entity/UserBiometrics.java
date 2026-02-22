@@ -1,4 +1,4 @@
-package com.devlife4me.projectvital.model;
+package com.devlife4me.projectvital.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,29 +8,33 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "profiles")
+@Table(name = "user_biometrics")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserProfile {
+public class UserBiometrics {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "user_id", unique = true, nullable = false)
+    @Column(name = "user_id")
     private UUID userId;
 
-    @Column(name = "email")
-    private String email;
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
 
-    @Column(name = "display_name")
-    private String displayName;
+    @Column(name = "height")
+    private Float height;
+
+    @Column(name = "current_weight")
+    private Float currentWeight;
+
+    @Column(name = "target_weight")
+    private Float targetWeight;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
