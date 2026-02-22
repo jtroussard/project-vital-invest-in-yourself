@@ -23,4 +23,7 @@ spring:
 logging:
   level:
     root: INFO
-    org.springframework.security: INFO
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.boot.autoconfigure.logging: DEBUG
