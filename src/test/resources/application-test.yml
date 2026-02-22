@@ -19,3 +19,4 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9999 # Dummy URI
+          jwk-set-uri: http://localhost:9999/.well-known/jwks.json

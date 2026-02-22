@@ -18,3 +18,9 @@ spring:
           # This should point to the Supabase Dev Project
           issuer-uri: https://moljpfoetpxwnrykvsxq.supabase.co/auth/v1
           jwk-set-uri: https://moljpfoetpxwnrykvsxq.supabase.co/auth/v1/.well-known/jwks.json
+          audiences: authenticated
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO
