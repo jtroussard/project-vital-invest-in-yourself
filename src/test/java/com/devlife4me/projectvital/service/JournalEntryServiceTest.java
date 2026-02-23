@@ -1,6 +1,6 @@
 package com.devlife4me.projectvital.service;
 
-import com.devlife4me.projectvital.dto.MetricEntryRequest;
+import com.devlife4me.projectvital.model.dto.request.MetricEntryRequest;
 import com.devlife4me.projectvital.model.entity.*;
 import com.devlife4me.projectvital.model.enums.JournalEntryType;
 import com.devlife4me.projectvital.repo.JournalEntryRepo;

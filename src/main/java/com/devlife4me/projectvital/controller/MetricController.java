@@ -33,6 +33,11 @@ public class MetricController {
         return ResponseEntity.ok(metric);
     }
 
+    @GetMapping("/type/{typeId}")
+    public ResponseEntity<List<Metric>> getMetricsByType(@PathVariable Long typeId) {
+        return ResponseEntity.ok(metricService.getMetricsByMeasurementType(typeId));
+    }
+
     @GetMapping("/types")
     public ResponseEntity<List<MeasurementType>> getMeasurementTypes() {
         return ResponseEntity.ok(metricService.getAllMeasurementTypes());

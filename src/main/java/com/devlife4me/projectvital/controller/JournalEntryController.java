@@ -1,7 +1,7 @@
 package com.devlife4me.projectvital.controller;
 
-import com.devlife4me.projectvital.dto.BatchEntryRequest;
-import com.devlife4me.projectvital.dto.EntryRequest;
+import com.devlife4me.projectvital.model.dto.request.BatchEntryRequest;
+import com.devlife4me.projectvital.model.dto.request.EntryRequest;
 import com.devlife4me.projectvital.model.entity.JournalEntry;
 import com.devlife4me.projectvital.model.entity.Meal;
 import com.devlife4me.projectvital.model.enums.JournalEntryType;

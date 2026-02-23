@@ -12,12 +12,13 @@ import java.util.UUID;
 
 @Repository
 public interface JournalEntryRepo extends JpaRepository<JournalEntry, Long> {
-    List<JournalEntry> findByUserIdAndIsActiveTrueOrderByEntryDateDesc(UUID userId);
+        List<JournalEntry> findByUserIdAndIsActiveTrueOrderByEntryDateDesc(UUID userId);
 
-    Page<JournalEntry> findByUserIdAndIsActiveTrue(UUID userId, Pageable pageable);
+        Page<JournalEntry> findByUserIdAndIsActiveTrue(UUID userId, Pageable pageable);
 
-    List<JournalEntry> findByUserIdAndMetricIdAndIsActiveTrueOrderByEntryDateDesc(UUID userId, Long metricId);
+        List<JournalEntry> findByUserIdAndMetricIdAndIsActiveTrueOrderByEntryDateDesc(UUID userId, Long metricId);
 
-    List<JournalEntry> findByUserIdAndEntryDateBetweenAndIsActiveTrue(UUID userId, OffsetDateTime start,
-            OffsetDateTime end);
+        List<JournalEntry> findByUserIdAndEntryDateBetweenAndIsActiveTrue(UUID userId, OffsetDateTime start,
+                        OffsetDateTime end);
+
 }

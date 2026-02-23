@@ -71,4 +71,18 @@ class MetricServiceTest {
         assertEquals(existing, result);
         verify(measurementTypeRepo, never()).save(any());
     }
+
+    @Test
+    void getMetricsByMeasurementType_ReturnsList() {
+        Long typeId = 1L;
+        Metric metric = Metric.builder().name("Weight").build();
+        when(metricRepo.findByMeasurementTypeId(typeId)).thenReturn(java.util.List.of(metric));
+
+        java.util.List<Metric> result = metricService.getMetricsByMeasurementType(typeId);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Weight", result.get(0).getName());
+        verify(metricRepo).findByMeasurementTypeId(typeId);
+    }
 }

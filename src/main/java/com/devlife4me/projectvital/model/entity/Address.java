@@ -1,5 +1,6 @@
 package com.devlife4me.projectvital.model.entity;
 
+import com.devlife4me.projectvital.model.enums.CountryCode;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,10 +36,9 @@ public class Address {
         if (postalCode != null && !postalCode.isEmpty())
             sb.append(" ").append(postalCode);
         if (country != null && !country.isEmpty()) {
-            com.devlife4me.projectvital.model.enums.CountryCode cc = com.devlife4me.projectvital.model.enums.CountryCode
-                    .fromCode(country);
+            CountryCode cc = CountryCode.fromCode(country);
             sb.append(", ").append(
-                    cc == com.devlife4me.projectvital.model.enums.CountryCode.UNKNOWN ? country : cc.getDisplayName());
+                    cc == CountryCode.UNKNOWN ? country : cc.getDisplayName());
         }
         return sb.toString().trim();
     }

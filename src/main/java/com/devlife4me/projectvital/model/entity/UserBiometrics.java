@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.devlife4me.projectvital.model.enums.Gender;
+
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;

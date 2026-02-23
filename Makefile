@@ -98,6 +98,7 @@ gcp-push:
 ## gcp-deploy: Deploy to Cloud Run
 gcp-deploy:
 ifeq ($(ENV),prod)
+	echo "Deploying to production..."
 	gcloud run deploy $(GCP_APP_NAME) \
 		--image $(GCP_IMAGE):latest \
 		--platform managed \
@@ -107,6 +108,7 @@ ifeq ($(ENV),prod)
 		--set-env-vars "SPRING_PROFILES_ACTIVE=$(ENV)" \
 		--set-secrets "DATABASE_URL=DATABASE_URL:latest,DATABASE_USERNAME=DATABASE_USERNAME:latest,DATABASE_PASSWORD=DATABASE_PASSWORD:latest,SUPABASE_KEY=SUPABASE_KEY:latest"
 else
+	echo "Deploying to dev..."
 	gcloud run deploy $(GCP_APP_NAME) \
 		--image $(GCP_IMAGE):latest \
 		--platform managed \
@@ -115,6 +117,9 @@ else
 		--allow-unauthenticated \
 		--set-env-vars "SPRING_PROFILES_ACTIVE=$(ENV),DATABASE_URL=$$(grep DATABASE_URL .env | cut -d= -f2- | sed 's/,/\\,/g'),DATABASE_USERNAME=$$(grep DATABASE_USERNAME .env | cut -d= -f2-),DATABASE_PASSWORD=$$(grep DATABASE_PASSWORD .env | cut -d= -f2-),SUPABASE_KEY=$$(grep SUPABASE_KEY .env | cut -d= -f2-)"
 endif
+
+## deploy: Complete deployment pipeline (build + push + deploy) to GCP (usage: make deploy ENV=prod)
+deploy: gcp-build gcp-push gcp-deploy
 
 ## help: Show this help message
 help:

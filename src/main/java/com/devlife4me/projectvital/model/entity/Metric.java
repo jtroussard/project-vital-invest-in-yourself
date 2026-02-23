@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.devlife4me.projectvital.model.enums.MetricDataType;
+
 @Entity
 @Table(name = "metrics")
 @Data
@@ -18,7 +20,7 @@ public class Metric {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "measurement_type_id")
     private MeasurementType measurementType;
 
@@ -31,5 +33,5 @@ public class Metric {
     @Enumerated(EnumType.STRING)
     @Column(name = "data_type", nullable = false)
     @Builder.Default
-    private com.devlife4me.projectvital.model.enums.MetricDataType dataType = com.devlife4me.projectvital.model.enums.MetricDataType.NUMERIC;
+    private MetricDataType dataType = MetricDataType.NUMERIC;
 }
