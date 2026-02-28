@@ -95,10 +95,20 @@ gcp-push:
 	gcloud auth configure-docker $(GCP_REGION)-docker.pkg.dev
 	docker push $(GCP_IMAGE):latest
 
-## gcp-deploy: Deploy to Cloud Run
+## deploy-dev: Complete deployment pipeline (build + push + deploy) for dev
+deploy-dev:
+	@$(MAKE) deploy ENV=dev
+
+## deploy-prod: Complete deployment pipeline (build + push + deploy) for prod
+deploy-prod:
+	@$(MAKE) deploy ENV=prod
+
+## gcp-deploy: Deploy to Cloud Run (legacy - please use deploy-dev or deploy-prod)
 gcp-deploy:
+	@echo "⚠️  WARNING: 'make gcp-deploy' is legacy. Did you remember to pass ENV? (Defaulting to ENV=$(ENV))"
+	@echo "💡 TIP: Use 'make deploy-dev' or 'make deploy-prod' for explicit targets."
 ifeq ($(ENV),prod)
-	echo "Deploying to production..."
+	@echo "Deploying to production..."
 	gcloud run deploy $(GCP_APP_NAME) \
 		--image $(GCP_IMAGE):latest \
 		--platform managed \
@@ -108,7 +118,7 @@ ifeq ($(ENV),prod)
 		--set-env-vars "SPRING_PROFILES_ACTIVE=$(ENV)" \
 		--set-secrets "DATABASE_URL=DATABASE_URL:latest,DATABASE_USERNAME=DATABASE_USERNAME:latest,DATABASE_PASSWORD=DATABASE_PASSWORD:latest,SUPABASE_KEY=SUPABASE_KEY:latest"
 else
-	echo "Deploying to dev..."
+	@echo "Deploying to dev..."
 	gcloud run deploy $(GCP_APP_NAME) \
 		--image $(GCP_IMAGE):latest \
 		--platform managed \
