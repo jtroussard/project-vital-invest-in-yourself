@@ -28,51 +28,51 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(UserSettingsController.class)
 class UserSettingsControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockitoBean
-    private UserSettingsService userSettingsService;
+        @MockitoBean
+        private UserSettingsService userSettingsService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @Test
-    @WithMockUser
-    void getSettings_ReturnsOk() throws Exception {
-        UUID userId = UUID.randomUUID();
-        UserSettings settings = UserSettings.builder()
-                .userId(userId)
-                .build();
+        @Test
+        @WithMockUser
+        void getSettings_ReturnsOk() throws Exception {
+                UUID userId = UUID.randomUUID();
+                UserSettings settings = UserSettings.builder()
+                                .userId(userId)
+                                .build();
 
-        when(userSettingsService.getSettings(userId)).thenReturn(settings);
+                when(userSettingsService.getSettings(userId)).thenReturn(settings);
 
-        mockMvc.perform(get("/api/settings")
-                .with(jwt().jwt(builder -> builder.subject(userId.toString()))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(userId.toString()));
-    }
+                mockMvc.perform(get("/api/settings")
+                                .with(jwt().jwt(builder -> builder.subject(userId.toString()))))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.userId").value(userId.toString()));
+        }
 
-    @Test
-    @WithMockUser
-    void updateDefaultMetrics_ReturnsOk() throws Exception {
-        UUID userId = UUID.randomUUID();
-        List<Long> metricIds = Arrays.asList(1L, 2L, 3L);
-        UserSettings settings = UserSettings.builder()
-                .userId(userId)
-                .defaultMetricIds(metricIds)
-                .build();
+        @Test
+        @WithMockUser
+        void updateDefaultJournalMetrics_ReturnsOk() throws Exception {
+                UUID userId = UUID.randomUUID();
+                List<Long> metricIds = Arrays.asList(1L, 2L, 3L);
+                UserSettings settings = UserSettings.builder()
+                                .userId(userId)
+                                .defaultJournalMetricIds(metricIds)
+                                .build();
 
-        when(userSettingsService.updateDefaultMetrics(eq(userId), eq(metricIds))).thenReturn(settings);
+                when(userSettingsService.updateDefaultJournalMetrics(eq(userId), eq(metricIds))).thenReturn(settings);
 
-        mockMvc.perform(put("/api/settings/default-metrics")
-                .with(csrf())
-                .with(jwt().jwt(builder -> builder.subject(userId.toString())))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(metricIds)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.defaultMetricIds[0]").value(1L))
-                .andExpect(jsonPath("$.defaultMetricIds[1]").value(2L))
-                .andExpect(jsonPath("$.defaultMetricIds[2]").value(3L));
-    }
+                mockMvc.perform(put("/api/settings/default-journal-metrics")
+                                .with(csrf())
+                                .with(jwt().jwt(builder -> builder.subject(userId.toString())))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(metricIds)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.defaultJournalMetricIds[0]").value(1L))
+                                .andExpect(jsonPath("$.defaultJournalMetricIds[1]").value(2L))
+                                .andExpect(jsonPath("$.defaultJournalMetricIds[2]").value(3L));
+        }
 }

@@ -29,9 +29,9 @@ public class UserSettings {
     @Builder.Default
     private UnitSystem preferredUnitSystem = UnitSystem.METRIC;
 
-    @Column(name = "default_metric_ids")
+    @Column(name = "default_journal_metric_ids")
     @Builder.Default
-    private java.util.List<Long> defaultMetricIds = new java.util.ArrayList<>();
+    private java.util.List<Long> defaultJournalMetricIds = new java.util.ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -26,9 +26,21 @@ public class UserSettingsService {
     }
 
     @Transactional
-    public UserSettings updateDefaultMetrics(UUID userId, List<Long> defaultMetricIds) {
+    public UserSettings updateSettings(UUID userId, UserSettings settingsData) {
         UserSettings settings = getSettings(userId);
-        settings.setDefaultMetricIds(defaultMetricIds);
+        if (settingsData.getPreferredUnitSystem() != null) {
+            settings.setPreferredUnitSystem(settingsData.getPreferredUnitSystem());
+        }
+        if (settingsData.getDefaultJournalMetricIds() != null) {
+            settings.setDefaultJournalMetricIds(settingsData.getDefaultJournalMetricIds());
+        }
+        return userSettingsRepo.save(settings);
+    }
+
+    @Transactional
+    public UserSettings updateDefaultJournalMetrics(UUID userId, List<Long> defaultJournalMetricIds) {
+        UserSettings settings = getSettings(userId);
+        settings.setDefaultJournalMetricIds(defaultJournalMetricIds);
         return userSettingsRepo.save(settings);
     }
 }

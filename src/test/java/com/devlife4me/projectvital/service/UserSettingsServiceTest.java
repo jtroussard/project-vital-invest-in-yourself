@@ -53,7 +53,7 @@ class UserSettingsServiceTest {
     }
 
     @Test
-    void updateDefaultMetrics_UpdatesAndSaves() {
+    void updateDefaultJournalMetrics_UpdatesAndSaves() {
         UUID userId = UUID.randomUUID();
         List<Long> metricIds = Arrays.asList(4L, 5L, 6L);
         UserSettings settings = UserSettings.builder().userId(userId).build();
@@ -61,10 +61,10 @@ class UserSettingsServiceTest {
         when(userSettingsRepo.findById(userId)).thenReturn(Optional.of(settings));
         when(userSettingsRepo.save(any(UserSettings.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        UserSettings result = userSettingsService.updateDefaultMetrics(userId, metricIds);
+        UserSettings result = userSettingsService.updateDefaultJournalMetrics(userId, metricIds);
 
         assertNotNull(result);
-        assertEquals(metricIds, result.getDefaultMetricIds());
+        assertEquals(metricIds, result.getDefaultJournalMetricIds());
         verify(userSettingsRepo).save(settings);
     }
 }
