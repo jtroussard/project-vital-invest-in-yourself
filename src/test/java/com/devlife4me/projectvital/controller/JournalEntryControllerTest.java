@@ -1,7 +1,7 @@
 package com.devlife4me.projectvital.controller;
 
 import com.devlife4me.projectvital.model.dto.request.EntryRequest;
-import com.devlife4me.projectvital.model.entity.JournalEntry;
+import com.devlife4me.projectvital.model.dto.response.JournalEntryResponse;
 import com.devlife4me.projectvital.model.enums.JournalEntryType;
 import com.devlife4me.projectvital.service.JournalEntryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,14 +14,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -50,7 +48,7 @@ class JournalEntryControllerTest {
                 request.setValue(75.5f);
                 request.setUnit("kg");
 
-                JournalEntry entry = JournalEntry.builder()
+                JournalEntryResponse response = JournalEntryResponse.builder()
                                 .id(1L)
                                 .userId(userId)
                                 .entryType(JournalEntryType.METRIC)
@@ -58,7 +56,7 @@ class JournalEntryControllerTest {
                                 .build();
 
                 when(journalEntryService.createMetricEntry(eq(userId), eq(1L), eq(75.5f), eq("kg"), any(), any()))
-                                .thenReturn(entry);
+                                .thenReturn(response);
 
                 mockMvc.perform(post("/api/journal")
                                 .with(jwt().jwt(builder -> builder.subject(userId.toString())))
@@ -85,8 +83,8 @@ class JournalEntryControllerTest {
         @WithMockUser
         void getEntry_ReturnsOk() throws Exception {
                 Long entryId = 1L;
-                JournalEntry entry = JournalEntry.builder().id(entryId).build();
-                when(journalEntryService.getEntry(entryId)).thenReturn(Optional.of(entry));
+                JournalEntryResponse response = JournalEntryResponse.builder().id(entryId).build();
+                when(journalEntryService.getEntry(entryId)).thenReturn(Optional.of(response));
 
                 mockMvc.perform(get("/api/journal/{id}", entryId))
                                 .andExpect(status().isOk())

@@ -5,6 +5,7 @@ import com.devlife4me.projectvital.model.entity.Metric;
 import com.devlife4me.projectvital.model.enums.MetricDataType;
 import com.devlife4me.projectvital.repo.MeasurementTypeRepo;
 import com.devlife4me.projectvital.repo.MetricRepo;
+import com.devlife4me.projectvital.model.enums.QuantityCategory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,7 +38,8 @@ class MetricServiceTest {
         when(measurementTypeRepo.findById(typeId)).thenReturn(Optional.of(type));
         when(metricRepo.save(any(Metric.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        Metric result = metricService.createMetric("Body Weight", "kg", typeId, MetricDataType.NUMERIC);
+        Metric result = metricService.createMetric("Body Weight", "kg", typeId, MetricDataType.NUMERIC,
+                QuantityCategory.MASS);
 
         assertNotNull(result);
         assertEquals("Body Weight", result.getName());

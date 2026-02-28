@@ -3,6 +3,7 @@ package com.devlife4me.projectvital.controller;
 import com.devlife4me.projectvital.model.entity.MeasurementType;
 import com.devlife4me.projectvital.model.entity.Metric;
 import com.devlife4me.projectvital.model.enums.MetricDataType;
+import com.devlife4me.projectvital.model.enums.QuantityCategory;
 import com.devlife4me.projectvital.service.MetricService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,8 @@ public class MetricController {
                 request.getName(),
                 request.getBaseUnit(),
                 request.getMeasurementTypeId(),
-                request.getDataType());
+                request.getDataType(),
+                request.getCategory());
         return ResponseEntity.ok(metric);
     }
 
@@ -54,5 +56,6 @@ public class MetricController {
         private String baseUnit;
         private Long measurementTypeId;
         private MetricDataType dataType;
+        private QuantityCategory category;
     }
 }

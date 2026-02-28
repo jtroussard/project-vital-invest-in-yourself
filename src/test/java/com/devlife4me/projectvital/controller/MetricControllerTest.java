@@ -65,7 +65,7 @@ class MetricControllerTest {
         metric.setId(2L);
         metric.setName("Height");
 
-        when(metricService.createMetric(anyString(), anyString(), any(), any()))
+        when(metricService.createMetric(anyString(), anyString(), any(), any(), any()))
                 .thenReturn(metric);
 
         mockMvc.perform(post("/api/metrics")

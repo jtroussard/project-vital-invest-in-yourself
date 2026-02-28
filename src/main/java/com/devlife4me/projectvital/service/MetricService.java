@@ -5,6 +5,7 @@ import com.devlife4me.projectvital.model.entity.Metric;
 import com.devlife4me.projectvital.repo.MeasurementTypeRepo;
 import com.devlife4me.projectvital.repo.MetricRepo;
 import com.devlife4me.projectvital.model.enums.MetricDataType;
+import com.devlife4me.projectvital.model.enums.QuantityCategory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +39,7 @@ public class MetricService {
 
     @Transactional
     public Metric createMetric(String name, String baseUnit, Long measurementTypeId,
-            MetricDataType dataType) {
+            MetricDataType dataType, QuantityCategory category) {
         MeasurementType type = measurementTypeRepo.findById(measurementTypeId)
                 .orElseThrow(() -> new RuntimeException("Measurement type not found"));
 
@@ -47,6 +48,7 @@ public class MetricService {
                 .baseUnit(baseUnit)
                 .measurementType(type)
                 .dataType(dataType != null ? dataType : MetricDataType.NUMERIC)
+                .category(category != null ? category : QuantityCategory.SCALAR)
                 .build();
 
         return metricRepo.save(metric);

@@ -1,8 +1,11 @@
 package com.devlife4me.projectvital.service;
 
 import com.devlife4me.projectvital.model.dto.request.MetricEntryRequest;
+import com.devlife4me.projectvital.model.dto.response.JournalEntryResponse;
 import com.devlife4me.projectvital.model.entity.*;
 import com.devlife4me.projectvital.model.enums.JournalEntryType;
+import com.devlife4me.projectvital.model.enums.QuantityCategory;
+import com.devlife4me.projectvital.model.enums.UnitSystem;
 import com.devlife4me.projectvital.repo.JournalEntryRepo;
 import com.devlife4me.projectvital.repo.MetricRepo;
 import org.junit.jupiter.api.Test;
@@ -11,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -26,133 +28,188 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class JournalEntryServiceTest {
 
-    @Mock
-    private JournalEntryRepo journalEntryRepo;
+        @Mock
+        private JournalEntryRepo journalEntryRepo;
 
-    @Mock
-    private MetricRepo metricRepo;
+        @Mock
+        private MetricRepo metricRepo;
 
-    @Mock
-    private ConversionService conversionService;
+        @Mock
+        private ConversionService conversionService;
 
-    @Mock
-    private NutritionService nutritionService;
+        @Mock
+        private NutritionService nutritionService;
 
-    @InjectMocks
-    private JournalEntryService journalEntryService;
+        @Mock
+        private UserSettingsService userSettingsService;
 
-    @Test
-    void createMetricEntry_CalculatesValueAndSaves() {
-        UUID userId = UUID.randomUUID();
-        Long metricId = 1L;
-        Metric metric = Metric.builder()
-                .id(metricId)
-                .measurementType(MeasurementType.builder().name("Weight").build())
-                .build();
+        @InjectMocks
+        private JournalEntryService journalEntryService;
 
-        when(metricRepo.findById(metricId)).thenReturn(Optional.of(metric));
-        when(conversionService.convertToMetric(200.0f, "Weight", "lb")).thenReturn(90.71f);
-        when(journalEntryRepo.save(any(JournalEntry.class))).thenAnswer(i -> i.getArguments()[0]);
+        @Test
+        void createMetricEntry_CalculatesValueAndSaves() {
+                UUID userId = UUID.randomUUID();
+                Long metricId = 1L;
+                Metric metric = Metric.builder()
+                                .id(metricId)
+                                .category(QuantityCategory.MASS)
+                                .measurementType(MeasurementType.builder().name("Weight").build())
+                                .name("Weight")
+                                .build();
 
-        JournalEntry result = journalEntryService.createMetricEntry(userId, metricId, 200.0f, "lb", null, "Weight log");
+                UserSettings settings = UserSettings.builder()
+                                .preferredUnitSystem(UnitSystem.METRIC)
+                                .build();
 
-        assertNotNull(result);
-        assertEquals(90.71f, result.getValue());
-        assertEquals(JournalEntryType.METRIC, result.getEntryType());
-        verify(journalEntryRepo).save(any(JournalEntry.class));
-    }
+                when(metricRepo.findById(metricId)).thenReturn(Optional.of(metric));
+                when(conversionService.convertToMetric(200.0f, QuantityCategory.MASS, "lb")).thenReturn(90.71f);
+                when(userSettingsService.getSettings(userId)).thenReturn(settings);
+                when(conversionService.getDisplayUnit(QuantityCategory.MASS, UnitSystem.METRIC)).thenReturn("kg");
+                when(conversionService.convertFromMetric(90.71f, QuantityCategory.MASS, "kg")).thenReturn(90.71f);
+                when(journalEntryRepo.save(any(JournalEntry.class))).thenAnswer(i -> {
+                        JournalEntry e = i.getArgument(0);
+                        e.setId(1L);
+                        return e;
+                });
 
-    @Test
-    void createBatchMetricEntries_SavesAll() {
-        UUID userId = UUID.randomUUID();
-        Long metricId = 1L;
-        Metric metric = Metric.builder()
-                .id(metricId)
-                .measurementType(MeasurementType.builder().name("Weight").build())
-                .build();
-        MetricEntryRequest req = new MetricEntryRequest();
-        req.setMetricId(metricId);
-        req.setValue(200.0f);
-        req.setUnit("lb");
+                JournalEntryResponse result = journalEntryService.createMetricEntry(userId, metricId, 200.0f, "lb",
+                                null,
+                                "Weight log");
 
-        when(metricRepo.findById(metricId)).thenReturn(Optional.of(metric));
-        when(conversionService.convertToMetric(200.0f, "Weight", "lb")).thenReturn(90.71f);
-        when(journalEntryRepo.saveAll(anyList())).thenAnswer(i -> i.getArguments()[0]);
+                assertNotNull(result);
+                assertEquals(90.71f, result.getValue());
+                assertEquals(90.71f, result.getDisplayValue());
+                assertEquals("kg", result.getDisplayUnit());
+                assertEquals(JournalEntryType.METRIC, result.getEntryType());
+        }
 
-        List<JournalEntry> results = journalEntryService.createBatchMetricEntries(userId,
-                Collections.singletonList(req), null);
+        @Test
+        void createBatchMetricEntries_SavesAll() {
+                UUID userId = UUID.randomUUID();
+                Long metricId = 1L;
+                Metric metric = Metric.builder()
+                                .id(metricId)
+                                .category(QuantityCategory.MASS)
+                                .measurementType(MeasurementType.builder().name("Weight").build())
+                                .name("Weight")
+                                .build();
+                MetricEntryRequest req = new MetricEntryRequest();
+                req.setMetricId(metricId);
+                req.setValue(200.0f);
+                req.setUnit("lb");
 
-        assertNotNull(results);
-        assertEquals(1, results.size());
-        assertEquals(90.71f, results.get(0).getValue());
-        verify(journalEntryRepo).saveAll(anyList());
-    }
+                UserSettings settings = UserSettings.builder()
+                                .preferredUnitSystem(UnitSystem.METRIC)
+                                .build();
 
-    @Test
-    void createMealEntry_CalculatesNutritionAndSaves() {
-        UUID userId = UUID.randomUUID();
-        Meal meal = Meal.builder()
-                .items(Collections.singletonList(new MealItem()))
-                .build();
+                when(userSettingsService.getSettings(userId)).thenReturn(settings);
+                when(metricRepo.findById(metricId)).thenReturn(Optional.of(metric));
+                when(conversionService.convertToMetric(200.0f, QuantityCategory.MASS, "lb")).thenReturn(90.71f);
+                when(conversionService.getDisplayUnit(QuantityCategory.MASS, UnitSystem.METRIC)).thenReturn("kg");
+                when(conversionService.convertFromMetric(90.71f, QuantityCategory.MASS, "kg")).thenReturn(90.71f);
+                when(journalEntryRepo.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
-        when(journalEntryRepo.save(any(JournalEntry.class))).thenAnswer(i -> i.getArguments()[0]);
+                List<JournalEntryResponse> results = journalEntryService.createBatchMetricEntries(userId,
+                                Collections.singletonList(req), null);
 
-        JournalEntry result = journalEntryService.createMealEntry(userId, meal, null);
+                assertNotNull(results);
+                assertEquals(1, results.size());
+                assertEquals(90.71f, results.get(0).getValue());
+        }
 
-        assertNotNull(result);
-        assertEquals(JournalEntryType.MEAL, result.getEntryType());
-        verify(nutritionService).calculateTotals(meal);
-        verify(journalEntryRepo).save(any(JournalEntry.class));
-    }
+        @Test
+        void createMealEntry_CalculatesNutritionAndSaves() {
+                UUID userId = UUID.randomUUID();
+                Meal meal = Meal.builder()
+                                .items(Collections.singletonList(new MealItem()))
+                                .build();
 
-    @Test
-    void createNoteEntry_SavesAsNote() {
-        UUID userId = UUID.randomUUID();
-        String notes = "Important morning observation";
-        when(journalEntryRepo.save(any(JournalEntry.class))).thenAnswer(i -> i.getArguments()[0]);
+                UserSettings settings = UserSettings.builder()
+                                .preferredUnitSystem(UnitSystem.METRIC)
+                                .build();
 
-        JournalEntry result = journalEntryService.createNoteEntry(userId, notes, null);
+                when(userSettingsService.getSettings(userId)).thenReturn(settings);
+                when(journalEntryRepo.save(any(JournalEntry.class))).thenAnswer(i -> i.getArgument(0));
 
-        assertNotNull(result);
-        assertEquals(notes, result.getNotes());
-        assertEquals(JournalEntryType.NOTE, result.getEntryType());
-        assertTrue(result.getIsActive());
-        verify(journalEntryRepo).save(any(JournalEntry.class));
-    }
+                JournalEntryResponse result = journalEntryService.createMealEntry(userId, meal, null);
 
-    @Test
-    void getEntries_ReturnsActiveEntriesOrdered() {
-        UUID userId = UUID.randomUUID();
-        List<JournalEntry> entries = Arrays.asList(new JournalEntry(), new JournalEntry());
-        when(journalEntryRepo.findByUserIdAndIsActiveTrueOrderByEntryDateDesc(userId)).thenReturn(entries);
+                assertNotNull(result);
+                assertEquals(JournalEntryType.MEAL, result.getEntryType());
+                verify(nutritionService).calculateTotals(meal);
+        }
 
-        List<JournalEntry> result = journalEntryService.getEntries(userId);
+        @Test
+        void createNoteEntry_SavesAsNote() {
+                UUID userId = UUID.randomUUID();
+                String notes = "Important morning observation";
 
-        assertEquals(2, result.size());
-        verify(journalEntryRepo).findByUserIdAndIsActiveTrueOrderByEntryDateDesc(userId);
-    }
+                UserSettings settings = UserSettings.builder()
+                                .preferredUnitSystem(UnitSystem.METRIC)
+                                .build();
 
-    @Test
-    void getEntry_ReturnsOptionalEntry() {
-        Long id = 1L;
-        JournalEntry entry = new JournalEntry();
-        when(journalEntryRepo.findById(id)).thenReturn(Optional.of(entry));
+                when(userSettingsService.getSettings(userId)).thenReturn(settings);
+                when(journalEntryRepo.save(any(JournalEntry.class))).thenAnswer(i -> i.getArgument(0));
 
-        Optional<JournalEntry> result = journalEntryService.getEntry(id);
+                JournalEntryResponse result = journalEntryService.createNoteEntry(userId, notes, null);
 
-        assertTrue(result.isPresent());
-        assertEquals(entry, result.get());
-    }
+                assertNotNull(result);
+                assertEquals(notes, result.getNotes());
+                assertEquals(JournalEntryType.NOTE, result.getEntryType());
+        }
 
-    @Test
-    void deleteEntry_UpdatesIsActiveToFalse() {
-        Long id = 1L;
-        JournalEntry entry = JournalEntry.builder().isActive(true).build();
-        when(journalEntryRepo.findById(id)).thenReturn(Optional.of(entry));
+        @Test
+        void getEntries_ReturnsActiveEntriesOrdered() {
+                UUID userId = UUID.randomUUID();
+                JournalEntry entry = JournalEntry.builder()
+                                .userId(userId)
+                                .entryType(JournalEntryType.NOTE)
+                                .build();
+                List<JournalEntry> entries = Arrays.asList(entry);
 
-        journalEntryService.deleteEntry(id);
+                UserSettings settings = UserSettings.builder()
+                                .preferredUnitSystem(UnitSystem.METRIC)
+                                .build();
 
-        assertFalse(entry.getIsActive());
-        verify(journalEntryRepo).save(entry);
-    }
+                when(userSettingsService.getSettings(userId)).thenReturn(settings);
+                when(journalEntryRepo.findByUserIdAndIsActiveTrueOrderByEntryDateDesc(userId)).thenReturn(entries);
+
+                List<JournalEntryResponse> result = journalEntryService.getEntries(userId);
+
+                assertEquals(1, result.size());
+        }
+
+        @Test
+        void getEntry_ReturnsOptionalEntry() {
+                Long id = 1L;
+                UUID userId = UUID.randomUUID();
+                JournalEntry entry = JournalEntry.builder()
+                                .id(id)
+                                .userId(userId)
+                                .entryType(JournalEntryType.NOTE)
+                                .build();
+
+                UserSettings settings = UserSettings.builder()
+                                .preferredUnitSystem(UnitSystem.METRIC)
+                                .build();
+
+                when(journalEntryRepo.findById(id)).thenReturn(Optional.of(entry));
+                when(userSettingsService.getSettings(userId)).thenReturn(settings);
+
+                Optional<JournalEntryResponse> result = journalEntryService.getEntry(id);
+
+                assertTrue(result.isPresent());
+                assertEquals(id, result.get().getId());
+        }
+
+        @Test
+        void deleteEntry_UpdatesIsActiveToFalse() {
+                Long id = 1L;
+                JournalEntry entry = JournalEntry.builder().isActive(true).build();
+                when(journalEntryRepo.findById(id)).thenReturn(Optional.of(entry));
+
+                journalEntryService.deleteEntry(id);
+
+                assertFalse(entry.getIsActive());
+                verify(journalEntryRepo).save(entry);
+        }
 }

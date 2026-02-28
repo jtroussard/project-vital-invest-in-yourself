@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import com.devlife4me.projectvital.model.enums.MetricDataType;
+import com.devlife4me.projectvital.model.enums.QuantityCategory;
 
 @Entity
 @Table(name = "metrics")
@@ -23,6 +24,11 @@ public class Metric {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "measurement_type_id")
     private MeasurementType measurementType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", nullable = false)
+    @Builder.Default
+    private QuantityCategory category = QuantityCategory.SCALAR;
 
     @Column(unique = true, nullable = false)
     private String name;

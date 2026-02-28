@@ -1,11 +1,10 @@
 package com.devlife4me.projectvital.service;
 
 import com.devlife4me.projectvital.model.dto.request.MetricEntryRequest;
-import com.devlife4me.projectvital.model.entity.JournalEntry;
-import com.devlife4me.projectvital.model.entity.Meal;
-import com.devlife4me.projectvital.model.entity.MealItem;
-import com.devlife4me.projectvital.model.entity.Metric;
+import com.devlife4me.projectvital.model.dto.response.JournalEntryResponse;
+import com.devlife4me.projectvital.model.entity.*;
 import com.devlife4me.projectvital.model.enums.JournalEntryType;
+import com.devlife4me.projectvital.model.enums.UnitSystem;
 import com.devlife4me.projectvital.repo.JournalEntryRepo;
 import com.devlife4me.projectvital.repo.MetricRepo;
 import lombok.RequiredArgsConstructor;
@@ -16,108 +15,143 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class JournalEntryService {
 
-    private final JournalEntryRepo journalEntryRepo;
-    private final MetricRepo metricRepo;
-    private final ConversionService conversionService;
-    private final NutritionService nutritionService;
+        private final JournalEntryRepo journalEntryRepo;
+        private final MetricRepo metricRepo;
+        private final ConversionService conversionService;
+        private final NutritionService nutritionService;
+        private final UserSettingsService userSettingsService;
 
-    @Transactional
-    public JournalEntry createMetricEntry(UUID userId, Long metricId, float value, String inputUnit,
-            OffsetDateTime entryDate, String notes) {
-        Metric metric = metricRepo.findById(metricId)
-                .orElseThrow(() -> new RuntimeException("Metric not found"));
+        @Transactional
+        public JournalEntryResponse createMetricEntry(UUID userId, Long metricId, float value, String inputUnit,
+                        OffsetDateTime entryDate, String notes) {
+                Metric metric = metricRepo.findById(metricId)
+                                .orElseThrow(() -> new RuntimeException("Metric not found"));
 
-        float metricValue = conversionService.convertToMetric(value, metric.getMeasurementType().getName(), inputUnit);
+                float metricValue = conversionService.convertToMetric(value, metric.getCategory(), inputUnit);
 
-        JournalEntry entry = JournalEntry.builder()
-                .userId(userId)
-                .metric(metric)
-                .value(metricValue)
-                .entryType(JournalEntryType.METRIC)
-                .entryDate(entryDate != null ? entryDate : OffsetDateTime.now())
-                .notes(notes)
-                .isActive(true)
-                .build();
+                JournalEntry entry = JournalEntry.builder()
+                                .userId(userId)
+                                .metric(metric)
+                                .entryType(JournalEntryType.METRIC)
+                                .value(metricValue)
+                                .notes(notes)
+                                .entryDate(entryDate != null ? entryDate : OffsetDateTime.now())
+                                .isActive(true)
+                                .build();
 
-        return journalEntryRepo.save(entry);
-    }
-
-    @Transactional
-    public List<JournalEntry> createBatchMetricEntries(UUID userId, List<MetricEntryRequest> requests,
-            OffsetDateTime entryDate) {
-        OffsetDateTime date = entryDate != null ? entryDate : OffsetDateTime.now();
-        List<JournalEntry> entries = requests.stream().map(req -> {
-            Metric metric = metricRepo.findById(req.getMetricId())
-                    .orElseThrow(() -> new RuntimeException("Metric not found: " + req.getMetricId()));
-
-            float metricValue = conversionService.convertToMetric(req.getValue(),
-                    metric.getMeasurementType().getName(), req.getUnit());
-
-            return JournalEntry.builder()
-                    .userId(userId)
-                    .metric(metric)
-                    .value(metricValue)
-                    .entryType(JournalEntryType.METRIC)
-                    .entryDate(date)
-                    .notes(req.getNotes())
-                    .isActive(true)
-                    .build();
-        }).collect(Collectors.toList());
-
-        return journalEntryRepo.saveAll(entries);
-    }
-
-    @Transactional
-    public JournalEntry createMealEntry(UUID userId, Meal mealData, OffsetDateTime entryDate) {
-        // Calculate totals for the meal
-        for (MealItem item : mealData.getItems()) {
-            item.setMeal(mealData);
+                JournalEntry saved = journalEntryRepo.save(entry);
+                return mapToResponse(saved, userSettingsService.getSettings(userId).getPreferredUnitSystem());
         }
-        nutritionService.calculateTotals(mealData);
 
-        JournalEntry entry = JournalEntry.builder()
-                .userId(userId)
-                .meal(mealData)
-                .entryType(JournalEntryType.MEAL)
-                .entryDate(entryDate != null ? entryDate : OffsetDateTime.now())
-                .isActive(true)
-                .build();
+        @Transactional
+        public List<JournalEntryResponse> createBatchMetricEntries(UUID userId, List<MetricEntryRequest> entries,
+                        OffsetDateTime entryDate) {
+                UnitSystem preferredSystem = userSettingsService.getSettings(userId).getPreferredUnitSystem();
+                List<JournalEntry> journalEntries = entries.stream()
+                                .map(req -> {
+                                        Metric metric = metricRepo.findById(req.getMetricId())
+                                                        .orElseThrow(() -> new RuntimeException(
+                                                                        "Metric not found: " + req.getMetricId()));
 
-        return journalEntryRepo.save(entry);
-    }
+                                        float metricValue = conversionService.convertToMetric(req.getValue(),
+                                                        metric.getCategory(), req.getUnit());
 
-    @Transactional
-    public JournalEntry createNoteEntry(UUID userId, String notes, OffsetDateTime entryDate) {
-        JournalEntry entry = JournalEntry.builder()
-                .userId(userId)
-                .notes(notes)
-                .entryType(JournalEntryType.NOTE)
-                .entryDate(entryDate != null ? entryDate : OffsetDateTime.now())
-                .isActive(true)
-                .build();
+                                        return JournalEntry.builder()
+                                                        .userId(userId)
+                                                        .metric(metric)
+                                                        .entryType(JournalEntryType.METRIC)
+                                                        .value(metricValue)
+                                                        .notes(req.getNotes())
+                                                        .entryDate(entryDate != null ? entryDate : OffsetDateTime.now())
+                                                        .isActive(true)
+                                                        .build();
+                                })
+                                .toList();
 
-        return journalEntryRepo.save(entry);
-    }
+                return journalEntryRepo.saveAll(journalEntries).stream()
+                                .map(entry -> mapToResponse(entry, preferredSystem))
+                                .toList();
+        }
 
-    public List<JournalEntry> getEntries(UUID userId) {
-        return journalEntryRepo.findByUserIdAndIsActiveTrueOrderByEntryDateDesc(userId);
-    }
+        @Transactional
+        public JournalEntryResponse createMealEntry(UUID userId, Meal meal, OffsetDateTime entryDate) {
+                nutritionService.calculateTotals(meal);
+                JournalEntry entry = JournalEntry.builder()
+                                .userId(userId)
+                                .entryType(JournalEntryType.MEAL)
+                                .meal(meal)
+                                .entryDate(entryDate != null ? entryDate : OffsetDateTime.now())
+                                .isActive(true)
+                                .build();
 
-    public Optional<JournalEntry> getEntry(Long id) {
-        return journalEntryRepo.findById(id);
-    }
+                JournalEntry saved = journalEntryRepo.save(entry);
+                return mapToResponse(saved, userSettingsService.getSettings(userId).getPreferredUnitSystem());
+        }
 
-    @Transactional
-    public void deleteEntry(Long id) {
-        journalEntryRepo.findById(id).ifPresent(entry -> {
-            entry.setIsActive(false);
-            journalEntryRepo.save(entry);
-        });
-    }
+        @Transactional
+        public JournalEntryResponse createNoteEntry(UUID userId, String notes, OffsetDateTime entryDate) {
+                JournalEntry entry = JournalEntry.builder()
+                                .userId(userId)
+                                .entryType(JournalEntryType.NOTE)
+                                .notes(notes)
+                                .entryDate(entryDate != null ? entryDate : OffsetDateTime.now())
+                                .isActive(true)
+                                .build();
+
+                JournalEntry saved = journalEntryRepo.save(entry);
+                return mapToResponse(saved, userSettingsService.getSettings(userId).getPreferredUnitSystem());
+        }
+
+        public List<JournalEntryResponse> getEntries(UUID userId) {
+                UnitSystem preferredSystem = userSettingsService.getSettings(userId).getPreferredUnitSystem();
+                return journalEntryRepo.findByUserIdAndIsActiveTrueOrderByEntryDateDesc(userId).stream()
+                                .map(entry -> mapToResponse(entry, preferredSystem))
+                                .toList();
+        }
+
+        public Optional<JournalEntryResponse> getEntry(Long id) {
+                return journalEntryRepo.findById(id)
+                                .map(entry -> mapToResponse(entry,
+                                                userSettingsService.getSettings(entry.getUserId())
+                                                                .getPreferredUnitSystem()));
+        }
+
+        @Transactional
+        public void deleteEntry(Long id) {
+                journalEntryRepo.findById(id).ifPresent(entry -> {
+                        entry.setIsActive(false);
+                        journalEntryRepo.save(entry);
+                });
+        }
+
+        private JournalEntryResponse mapToResponse(JournalEntry entry, UnitSystem preferredSystem) {
+                JournalEntryResponse.JournalEntryResponseBuilder builder = JournalEntryResponse.builder()
+                                .id(entry.getId())
+                                .userId(entry.getUserId())
+                                .entryType(entry.getEntryType())
+                                .notes(entry.getNotes())
+                                .entryDate(entry.getEntryDate())
+                                .meal(entry.getMeal());
+
+                if (entry.getMetric() != null) {
+                        Metric metric = entry.getMetric();
+                        builder.metricId(metric.getId())
+                                        .metricName(metric.getName())
+                                        .value(entry.getValue());
+
+                        String displayUnit = conversionService.getDisplayUnit(metric.getCategory(), preferredSystem);
+                        float displayValue = conversionService.convertFromMetric(entry.getValue(), metric.getCategory(),
+                                        displayUnit);
+
+                        builder.displayValue(displayValue)
+                                        .displayUnit(displayUnit);
+                }
+
+                return builder.build();
+        }
 }

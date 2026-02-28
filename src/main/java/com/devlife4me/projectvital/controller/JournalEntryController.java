@@ -2,8 +2,7 @@ package com.devlife4me.projectvital.controller;
 
 import com.devlife4me.projectvital.model.dto.request.BatchEntryRequest;
 import com.devlife4me.projectvital.model.dto.request.EntryRequest;
-import com.devlife4me.projectvital.model.entity.JournalEntry;
-import com.devlife4me.projectvital.model.entity.Meal;
+import com.devlife4me.projectvital.model.dto.response.JournalEntryResponse;
 import com.devlife4me.projectvital.model.enums.JournalEntryType;
 import com.devlife4me.projectvital.service.JournalEntryService;
 import lombok.RequiredArgsConstructor;
@@ -23,19 +22,19 @@ public class JournalEntryController {
     private final JournalEntryService journalEntryService;
 
     @PostMapping
-    public ResponseEntity<JournalEntry> createEntry(
+    public ResponseEntity<JournalEntryResponse> createEntry(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody EntryRequest request) {
 
         UUID userId = UUID.fromString(jwt.getSubject());
-        JournalEntry entry;
+        JournalEntryResponse response;
 
         if (request.getEntryType() == JournalEntryType.MEAL) {
-            entry = journalEntryService.createMealEntry(userId, request.getMeal(), request.getEntryDate());
+            response = journalEntryService.createMealEntry(userId, request.getMeal(), request.getEntryDate());
         } else if (request.getEntryType() == JournalEntryType.NOTE) {
-            entry = journalEntryService.createNoteEntry(userId, request.getNotes(), request.getEntryDate());
+            response = journalEntryService.createNoteEntry(userId, request.getNotes(), request.getEntryDate());
         } else {
-            entry = journalEntryService.createMetricEntry(
+            response = journalEntryService.createMetricEntry(
                     userId,
                     request.getMetricId(),
                     request.getValue(),
@@ -44,11 +43,11 @@ public class JournalEntryController {
                     request.getNotes());
         }
 
-        return ResponseEntity.ok(entry);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/batch")
-    public ResponseEntity<List<JournalEntry>> createBatchEntries(
+    public ResponseEntity<List<JournalEntryResponse>> createBatchEntries(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody BatchEntryRequest request) {
 
@@ -60,13 +59,13 @@ public class JournalEntryController {
     }
 
     @GetMapping
-    public ResponseEntity<List<JournalEntry>> getEntries(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<List<JournalEntryResponse>> getEntries(@AuthenticationPrincipal Jwt jwt) {
         UUID userId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(journalEntryService.getEntries(userId));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<JournalEntry> getEntry(@PathVariable Long id) {
+    public ResponseEntity<JournalEntryResponse> getEntry(@PathVariable Long id) {
         return journalEntryService.getEntry(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
