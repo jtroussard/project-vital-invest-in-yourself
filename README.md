@@ -58,26 +58,31 @@ To keep the system flexible but simple, we use a four-tier hierarchy for health 
 
 ### Visual Relationship
 
+#### Core Logic
 ```mermaid
 graph TD
     MT[Measurement Type: Folder] --> M[Metric: Specific Item]
     M --> DT[Data Type: Numeric/Scale]
     M --> QC[Quantity Category: Logic/Conversion]
+```
 
-    subgraph Example: Blood Pressure
+#### Example: Blood Pressure
+```mermaid
+graph TD
     BP[Measurement Type: Blood Pressure] --> SYS[Metric: Systolic]
     BP --> DIA[Metric: Diastolic]
     SYS --> S_DT[Data Type: Numeric]
     SYS --> S_QC[Quantity Category: SCALAR]
     DIA --> D_DT[Data Type: Numeric]
     DIA --> D_QC[Quantity Category: SCALAR]
-    end
+```
 
-    subgraph Example: Body Weight
+#### Example: Body Weight
+```mermaid
+graph TD
     W_MT[Measurement Type: Weight] --> W_M[Metric: Weight]
     W_M --> W_DT[Data Type: Numeric]
     W_M --> W_QC[Quantity Category: MASS]
-    end
 ```
 
 ### Practical Examples
