@@ -1,11 +1,13 @@
 package com.devlife4me.projectvital.service;
 
 import com.devlife4me.projectvital.model.dto.request.MetricEntryRequest;
+import com.devlife4me.projectvital.model.dto.response.JournalBatchResponse;
 import com.devlife4me.projectvital.model.dto.response.JournalEntryResponse;
 import com.devlife4me.projectvital.model.entity.*;
 import com.devlife4me.projectvital.model.enums.JournalEntryType;
 import com.devlife4me.projectvital.model.enums.QuantityCategory;
 import com.devlife4me.projectvital.model.enums.UnitSystem;
+import com.devlife4me.projectvital.repo.JournalBatchRepo;
 import com.devlife4me.projectvital.repo.JournalEntryRepo;
 import com.devlife4me.projectvital.repo.MetricRepo;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,6 +30,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
@@ -30,6 +39,9 @@ class JournalEntryServiceTest {
 
         @Mock
         private JournalEntryRepo journalEntryRepo;
+
+        @Mock
+        private JournalBatchRepo journalBatchRepo;
 
         @Mock
         private MetricRepo metricRepo;
@@ -66,6 +78,11 @@ class JournalEntryServiceTest {
                 when(userSettingsService.getSettings(userId)).thenReturn(settings);
                 when(conversionService.getDisplayUnit(QuantityCategory.MASS, UnitSystem.METRIC)).thenReturn("kg");
                 when(conversionService.convertFromMetric(90.71f, QuantityCategory.MASS, "kg")).thenReturn(90.71f);
+                when(journalBatchRepo.save(any(JournalBatch.class))).thenAnswer(i -> {
+                        JournalBatch b = i.getArgument(0);
+                        b.setId(10L);
+                        return b;
+                });
                 when(journalEntryRepo.save(any(JournalEntry.class))).thenAnswer(i -> {
                         JournalEntry e = i.getArgument(0);
                         e.setId(1L);
@@ -107,10 +124,15 @@ class JournalEntryServiceTest {
                 when(conversionService.convertToMetric(200.0f, QuantityCategory.MASS, "lb")).thenReturn(90.71f);
                 when(conversionService.getDisplayUnit(QuantityCategory.MASS, UnitSystem.METRIC)).thenReturn("kg");
                 when(conversionService.convertFromMetric(90.71f, QuantityCategory.MASS, "kg")).thenReturn(90.71f);
+                when(journalBatchRepo.save(any(JournalBatch.class))).thenAnswer(i -> {
+                        JournalBatch b = i.getArgument(0);
+                        b.setId(10L);
+                        return b;
+                });
                 when(journalEntryRepo.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
                 List<JournalEntryResponse> results = journalEntryService.createBatchMetricEntries(userId,
-                                Collections.singletonList(req), null);
+                                Collections.singletonList(req), null, null);
 
                 assertNotNull(results);
                 assertEquals(1, results.size());
@@ -129,9 +151,14 @@ class JournalEntryServiceTest {
                                 .build();
 
                 when(userSettingsService.getSettings(userId)).thenReturn(settings);
+                when(journalBatchRepo.save(any(JournalBatch.class))).thenAnswer(i -> {
+                        JournalBatch b = i.getArgument(0);
+                        b.setId(10L);
+                        return b;
+                });
                 when(journalEntryRepo.save(any(JournalEntry.class))).thenAnswer(i -> i.getArgument(0));
 
-                JournalEntryResponse result = journalEntryService.createMealEntry(userId, meal, null);
+                JournalEntryResponse result = journalEntryService.createMealEntry(userId, meal, null, null);
 
                 assertNotNull(result);
                 assertEquals(JournalEntryType.MEAL, result.getEntryType());
@@ -148,6 +175,11 @@ class JournalEntryServiceTest {
                                 .build();
 
                 when(userSettingsService.getSettings(userId)).thenReturn(settings);
+                when(journalBatchRepo.save(any(JournalBatch.class))).thenAnswer(i -> {
+                        JournalBatch b = i.getArgument(0);
+                        b.setId(10L);
+                        return b;
+                });
                 when(journalEntryRepo.save(any(JournalEntry.class))).thenAnswer(i -> i.getArgument(0));
 
                 JournalEntryResponse result = journalEntryService.createNoteEntry(userId, notes, null);
@@ -176,6 +208,52 @@ class JournalEntryServiceTest {
                 List<JournalEntryResponse> result = journalEntryService.getEntries(userId);
 
                 assertEquals(1, result.size());
+        }
+
+        @Test
+        void getBatches_ReturnsBatches() {
+                UUID userId = UUID.randomUUID();
+                JournalBatch batch = JournalBatch.builder()
+                                .id(10L)
+                                .userId(userId)
+                                .entries(Collections.emptyList())
+                                .build();
+                List<JournalBatch> batches = Collections.singletonList(batch);
+
+                UserSettings settings = UserSettings.builder()
+                                .preferredUnitSystem(UnitSystem.METRIC)
+                                .build();
+
+                when(userSettingsService.getSettings(userId)).thenReturn(settings);
+                when(journalBatchRepo.findByUserIdOrderByEntryDateDesc(userId)).thenReturn(batches);
+
+                List<JournalBatchResponse> result = journalEntryService.getBatches(userId);
+
+                assertEquals(1, result.size());
+                assertEquals(10L, result.get(0).getId());
+        }
+
+        @Test
+        void getBatches_Paginated_ReturnsPage() {
+                UUID userId = UUID.randomUUID();
+                JournalBatch batch = JournalBatch.builder()
+                                .id(10L)
+                                .userId(userId)
+                                .entries(Collections.emptyList())
+                                .build();
+                Page<JournalBatch> batchPage = new PageImpl<>(Collections.singletonList(batch));
+
+                UserSettings settings = UserSettings.builder()
+                                .preferredUnitSystem(UnitSystem.METRIC)
+                                .build();
+
+                when(userSettingsService.getSettings(userId)).thenReturn(settings);
+                when(journalBatchRepo.findByUserId(eq(userId), any(Pageable.class))).thenReturn(batchPage);
+
+                Page<JournalBatchResponse> result = journalEntryService.getBatches(userId, 0, 10);
+
+                assertEquals(1, result.getContent().size());
+                assertEquals(10L, result.getContent().get(0).getId());
         }
 
         @Test

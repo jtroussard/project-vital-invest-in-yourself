@@ -35,6 +35,10 @@ public class JournalEntry {
     @JoinColumn(name = "meal_id")
     private Meal meal;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "batch_id", nullable = false)
+    private JournalBatch batch;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "entry_type", nullable = false)
     @Builder.Default

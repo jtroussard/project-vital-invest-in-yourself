@@ -1,6 +1,5 @@
 package com.devlife4me.projectvital.model.entity;
 
-import com.devlife4me.projectvital.model.enums.UnitSystem;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,33 +9,34 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_settings")
+@Table(name = "journal_batches")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserSettings {
+public class JournalBatch {
 
     @Id
-    @Column(name = "user_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_unit_system")
-    @Builder.Default
-    private UnitSystem preferredUnitSystem = UnitSystem.METRIC;
+    @Column(name = "entry_date", nullable = false)
+    private OffsetDateTime entryDate;
 
-    /**
-     * This is a list of metrics that the user would like to always be included in
-     * their journal entry form. UX enhancement so the user doesn't have to
-     * individually add the fields each time.
-     */
-    @Column(name = "default_journal_metric_ids")
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private java.util.List<Long> defaultJournalMetricIds = new java.util.ArrayList<>();
+    private List<JournalEntry> entries = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -2,10 +2,13 @@ package com.devlife4me.projectvital.controller;
 
 import com.devlife4me.projectvital.model.dto.request.BatchEntryRequest;
 import com.devlife4me.projectvital.model.dto.request.EntryRequest;
+import com.devlife4me.projectvital.model.dto.response.JournalBatchResponse;
 import com.devlife4me.projectvital.model.dto.response.JournalEntryResponse;
 import com.devlife4me.projectvital.model.enums.JournalEntryType;
 import com.devlife4me.projectvital.service.JournalEntryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -21,6 +24,15 @@ public class JournalEntryController {
 
     private final JournalEntryService journalEntryService;
 
+    @GetMapping("/batches")
+    public ResponseEntity<Page<JournalBatchResponse>> getBatches(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.ok(journalEntryService.getBatches(userId, page, size));
+    }
+
     @PostMapping
     public ResponseEntity<JournalEntryResponse> createEntry(
             @AuthenticationPrincipal Jwt jwt,
@@ -30,7 +42,8 @@ public class JournalEntryController {
         JournalEntryResponse response;
 
         if (request.getEntryType() == JournalEntryType.MEAL) {
-            response = journalEntryService.createMealEntry(userId, request.getMeal(), request.getEntryDate());
+            response = journalEntryService.createMealEntry(userId, request.getMeal(), request.getEntryDate(),
+                    request.getNotes());
         } else if (request.getEntryType() == JournalEntryType.NOTE) {
             response = journalEntryService.createNoteEntry(userId, request.getNotes(), request.getEntryDate());
         } else {
@@ -55,7 +68,16 @@ public class JournalEntryController {
         return ResponseEntity.ok(journalEntryService.createBatchMetricEntries(
                 userId,
                 request.getEntries(),
-                request.getEntryDate()));
+                request.getEntryDate(),
+                request.getNotes()));
+    }
+
+    @GetMapping("/batches/{id}")
+    public ResponseEntity<JournalBatchResponse> getBatch(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return journalEntryService.getBatch(userId, id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping

@@ -25,5 +25,6 @@ public class JournalEntryResponse {
     private String displayUnit;
     private String notes;
     private OffsetDateTime entryDate;
+    private Long batchId;
     private Meal meal;
 }
