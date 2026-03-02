@@ -57,14 +57,42 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // @Bean
+    // public CorsConfigurationSource corsConfigurationSource() {
+    // CorsConfiguration configuration = new CorsConfiguration();
+
+    // List<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
+
+    // if (activeProfiles.contains("prod")) {
+    // configuration.setAllowedOrigins(List.of("https://project-vital-client-prod.web.app"));
+    // } else {
+    // configuration.setAllowedOrigins(List.of(
+    // "http://localhost:3000",
+    // "http://localhost:5173"));
+    // }
+
+    // configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE",
+    // "OPTIONS", "PATCH"));
+    // configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control",
+    // "Content-Type"));
+    // configuration.setAllowCredentials(true);
+
+    // UrlBasedCorsConfigurationSource source = new
+    // UrlBasedCorsConfigurationSource();
+    // source.registerCorsConfiguration("/**", configuration);
+    // return source;
+    // }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
         List<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
 
         if (activeProfiles.contains("prod")) {
-            configuration.setAllowedOrigins(List.of("https://project-vital-client-prod.web.app"));
+            configuration.setAllowedOrigins(List.of(
+                    "https://projectvital.app",
+                    "https://www.projectvital.app",
+                    "https://project-vital-client-prod.web.app"));
         } else {
             configuration.setAllowedOrigins(List.of(
                     "http://localhost:3000",
@@ -72,7 +100,7 @@ public class SecurityConfig {
         }
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type", "Origin", "Accept"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
